@@ -107,13 +107,9 @@ kbd{font:500 10.5px/1 var(--f-mono);padding:3px 5px;border-radius:5px;border:1px
 .axis-y span{min-width:18px;padding-inline:2px}
 .axis span.five{color:var(--muted);font-weight:700}
 .axis span.hover{color:var(--ink);background:var(--line)}
-.axis span.on{color:var(--on-accent);background:var(--accent)}
 .board{grid-column:2;grid-row:2;position:relative;display:grid;grid-template-columns:repeat(var(--cols),var(--cell));gap:var(--gap);padding:10px;background:var(--board);border-radius:14px;width:max-content;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-touch-callout:none}
 
 /* locating a coordinate from the hint text */
-.xband{position:absolute;pointer-events:none;background:color-mix(in oklab,var(--accent) 16%,transparent);border-radius:calc(var(--cell)*.24);z-index:2;animation:fade .15s ease both}
-.xband.row{left:6px;right:6px;height:calc(var(--cell) + 8px);top:calc(6px + var(--r) * (var(--cell) + var(--gap)))}
-.xband.col{top:6px;bottom:6px;width:calc(var(--cell) + 8px);left:calc(6px + var(--c) * (var(--cell) + var(--gap)))}
 .locator{position:absolute;pointer-events:none;z-index:3;width:calc(var(--cell) + 10px);height:calc(var(--cell) + 10px);top:calc(5px + var(--r) * (var(--cell) + var(--gap)));left:calc(5px + var(--c) * (var(--cell) + var(--gap)));border:3px solid var(--accent);border-radius:calc(var(--cell)*.3);box-shadow:0 0 0 3px var(--accent-soft),0 6px 18px -4px var(--shadow-c)}
 .locator::after{content:"";position:absolute;inset:-3px;border:2px solid var(--accent);border-radius:inherit;animation:ripple 1.1s ease-out infinite}
 .locator::before{content:attr(data-label);position:absolute;left:50%;bottom:calc(100% + 5px);transform:translateX(-50%);white-space:nowrap;font:600 11px/1 var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--accent);color:var(--on-accent)}
@@ -170,8 +166,6 @@ kbd{font:500 10.5px/1 var(--f-mono);padding:3px 5px;border-radius:5px;border:1px
 .result-card.win h2{color:var(--safe)} .result-card.lose h2{color:var(--danger)}
 .result-card p{margin:0;color:var(--muted)}
 .result-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;margin:4px 0}
-.cell.h.seen{background:linear-gradient(180deg,color-mix(in oklab,var(--danger-soft) 70%,var(--tile-hi)),var(--danger-soft));box-shadow:inset 0 0 0 1.5px color-mix(in oklab,var(--danger) 45%,transparent),0 2px 0 var(--tile-edge);cursor:default}
-.cell.h.seen:hover{transform:none;filter:none}
 .result-card .linkish{border:0;background:none;padding:10px 6px;color:var(--muted);font-weight:500;text-decoration:underline;text-underline-offset:3px}
 .result-card .linkish:hover{color:var(--ink)}
 .result-stats div{background:var(--surface);border-radius:10px;padding:8px 10px}
@@ -455,14 +449,13 @@ const Solver = (() => {
 
     const known = new Int8Array(N).fill(-1); // -1 未定, 0 推出安全, 1 推出是雷
     const unknown = [];
-    // grid: -1 = 未翻开；-2 = 玩家踩过、亲眼看到的雷（返回上一步后保留），直接当作已知的雷
-    for (let i = 0; i < N; i++) if (grid[i] < 0) { unknown.push(i); if (grid[i] === -2) known[i] = 1; }
+    for (let i = 0; i < N; i++) if (grid[i] === -1) unknown.push(i);
 
     // 每个带未知邻居的数字 = 一条约束
     const cons = [], cellCons = Array.from({ length: N }, () => []);
     for (let i = 0; i < N; i++) {
       if (grid[i] < 0) continue;
-      const cells = nb[i].filter(j => grid[j] < 0);
+      const cells = nb[i].filter(j => grid[j] === -1);
       if (!cells.length) continue;
       const id = cons.length;
       cons.push({ src: i, num: grid[i], cells });
@@ -748,7 +741,7 @@ const S = {
   hl: null, hlTemp: null, explodedAt: -1, lastEval: null, card: null,
   hintOpen: false, preCard: null,             // 提示是否展开 + 展开前分析台显示的内容
   prev: null,                                 // 上一步之前的盘面快照，用于踩雷后返回
-  booms: [], seen: new Set(), revealAll: false, undos: 0,   // 踩中的雷 / 返回后已确认的雷 / 是否已揭晓全部雷 / 返回次数
+  booms: [], revealAll: false, undos: 0,      // 踩中的雷 / 是否已揭晓全部雷 / 返回次数
   custom: LS.get('ms-custom', { rows: 20, cols: 24, mines: 90 }),
 };
 let els = [], keys = [], timerId = 0, toastTimer = 0;
@@ -774,7 +767,7 @@ const fmtBig = n => {
 /* 只导出玩家屏幕上看得到的信息 —— 求解器唯一的输入 */
 function buildView() {
   const N = S.rows * S.cols, grid = new Int8Array(N);
-  for (let i = 0; i < N; i++) grid[i] = S.st[i] === 1 ? S.adj[i] : S.seen.has(i) ? -2 : -1;
+  for (let i = 0; i < N; i++) grid[i] = S.st[i] === 1 ? S.adj[i] : -1;
   return { rows: S.rows, cols: S.cols, total: S.mines, grid };
 }
 function getAnalysis() {
@@ -796,7 +789,7 @@ function newGame(diff = S.diff, cfg) {
   const N = S.rows * S.cols;
   S.mine = new Uint8Array(N); S.adj = new Uint8Array(N); S.st = new Uint8Array(N);
   stopTimer();
-  Object.assign(S, { state: 'ready', revealed: 0, flags: 0, elapsed: 0, hints: 0, log: [], analysis: null, anaVer: -1, hl: null, hlTemp: null, explodedAt: -1, lastEval: null, hintOpen: false, preCard: null, prev: null, booms: [], seen: new Set(), revealAll: false, undos: 0 });
+  Object.assign(S, { state: 'ready', revealed: 0, flags: 0, elapsed: 0, hints: 0, log: [], analysis: null, anaVer: -1, hl: null, hlTemp: null, explodedAt: -1, lastEval: null, hintOpen: false, preCard: null, prev: null, booms: [], revealAll: false, undos: 0 });
   S.ver++;
   LS.set('ms-diff', diff);
   hideResult(); clearToast();
@@ -865,8 +858,11 @@ function doMove(targets) {
   } else {
     ev = evaluate(targets);
   }
-  // 记下这一步之前的盘面，踩雷后可以返回
-  S.prev = { st: S.st.slice(), revealed: S.revealed, flags: S.flags, lastEval: S.lastEval };
+  // 记下这一步之前的盘面和页面状态，踩雷后可以原样返回
+  S.prev = {
+    st: S.st.slice(), revealed: S.revealed, flags: S.flags, lastEval: S.lastEval,
+    card: S.card, hintOpen: S.hintOpen, preCard: S.preCard, hl: S.hl,
+  };
   const booms = openCells(targets);
   // 盘面变了，展开中的提示已过期：收起并恢复到点提示之前的样子
   const wasHint = S.hintOpen, preCard = S.preCard;
@@ -891,7 +887,7 @@ function chord(i) {
   doMove(nb.filter(j => S.st[j] === 0));
 }
 function toggleFlag(i) {
-  if (S.state === 'won' || S.state === 'lost' || S.st[i] === 1 || S.seen.has(i)) return;
+  if (S.state === 'won' || S.state === 'lost' || S.st[i] === 1) return;
   if (S.st[i] === 2) { S.st[i] = 0; S.flags--; } else { S.st[i] = 2; S.flags++; }
   S.hlTemp = null;
   renderBoard(); renderStatus();
@@ -933,7 +929,7 @@ function loseCard() {
   const ev = S.lastEval;
   const html = `<p>${loseReview(ev)}</p>` + (canUndo()
     ? `<div class="row"><button type="button" class="btn primary" data-act="undo">返回上一步 <kbd>Z</kbd></button><button type="button" class="btn" data-act="reveal">揭晓全部雷</button></div>
-       <p class="hint-tip">返回后，踩中的格子会插上旗、标为「已确认的雷」，求解器也会把它当作已知的雷。其他雷的位置不会显示。揭晓全部雷之后就不能再返回。</p>`
+       <p class="hint-tip">返回后，盘面回到这一步之前的样子，其他雷的位置不会显示。揭晓全部雷之后就不能再返回。</p>`
     : `<div class="row"><button type="button" class="btn primary" data-act="again">再来一局 <kbd>N</kbd></button></div>`);
   return { tone: 'danger', pill: '踩雷', title: canUndo() ? '可以返回上一步' : '这一局结束了', html };
 }
@@ -954,22 +950,23 @@ function undo() {
   const p = S.prev;
   S.st = p.st; S.revealed = p.revealed; S.flags = p.flags;
   // 踩中的雷玩家已经亲眼看到：插旗并记为已确认
-  for (const b of S.booms) { if (S.st[b] !== 2) { S.st[b] = 2; S.flags++; } S.seen.add(b); }
   const fatal = S.log[S.log.length - 1];
   if (fatal) fatal.undone = true;
   // 这次死亡不算输：撤销踩雷时记下的那一局
   const k = statsKey(), st = LS.get(k, { played: 0, won: 0, best: null });
   st.played = Math.max(0, st.played - 1); LS.set(k, st);
-  const hit = S.booms.slice();
-  Object.assign(S, { state: 'playing', explodedAt: -1, booms: [], prev: null, lastEval: p.lastEval, hl: null, hlTemp: null });
-  S.undos++; S.ver++;
-  hideResult(); clearToast(); startTimer();
-  setCard({
-    tone: 'info', pill: '已返回', title: '回到了踩雷之前',
-    html: `<p>${hit.map(pos).join('、')} 是雷，已经插上旗并标为已确认（红底）。求解器会把它当作已知的雷，提示和概率图都已经算上这条信息。</p>
-      <p class="hint-tip">换一个选择。卡住时按 H 看看现在哪里更安全。这局用了返回，赢了也不计入最佳用时。</p>`,
+  // 页面也回到点击之前：分析台内容、提示是否展开及其高亮
+  Object.assign(S, {
+    state: 'playing', explodedAt: -1, booms: [], prev: null, lastEval: p.lastEval,
+    hintOpen: p.hintOpen, preCard: p.preCard, hl: p.hl, hlTemp: null,
   });
+  S.undos++; S.ver++;
+  hideResult(); startTimer();
+  setCard(p.card || defaultCard());
   renderAll();
+  $('#toastSlot').innerHTML = '<div class="toast orange"><span class="tag">已返回</span><span>盘面回到了这一步之前。这局用了返回，赢了也不计入最佳用时。</span></div>';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(clearToast, 5000);
 }
 function loseReview(ev) {
   if (!ev) return '';
@@ -1177,8 +1174,8 @@ function buildBoard() {
   b.innerHTML = html;
   els = [...b.children];
   keys = new Array(N).fill('');
-  // 定位用的覆盖层（行带、列带、定位框），放在格子之后，不影响格子下标
-  b.insertAdjacentHTML('beforeend', '<div class="xband row" hidden></div><div class="xband col" hidden></div><div class="locator" hidden></div>');
+  // 定位框覆盖层，放在格子之后，不影响格子下标
+  b.insertAdjacentHTML('beforeend', '<div class="locator" hidden></div>');
   const lbl = n => `<span${n % 5 === 0 ? ' class="five"' : ''}>${n}</span>`;
   $('#axisX').innerHTML = Array.from({ length: S.cols }, (_, k) => lbl(k + 1)).join('');
   $('#axisY').innerHTML = Array.from({ length: S.rows }, (_, k) => lbl(k + 1)).join('');
@@ -1209,11 +1206,10 @@ function locate(i, opt = {}) {
   if (!(i >= 0 && i < S.rows * S.cols)) return;
   clearTimeout(locTimer);
   const b = $('#board'), [r, c] = rc(i);
-  const row = b.querySelector('.xband.row'), col = b.querySelector('.xband.col'), loc = b.querySelector('.locator');
-  for (const el of [row, col, loc]) { el.style.setProperty('--r', r - 1); el.style.setProperty('--c', c - 1); el.hidden = false; }
+  const loc = b.querySelector('.locator');
+  loc.style.setProperty('--r', r - 1); loc.style.setProperty('--c', c - 1); loc.hidden = false;
   loc.dataset.label = `第${r}行 · 第${c}列`;
   loc.classList.toggle('below', r <= 2);
-  axisMark(r, c, 'on');
   document.querySelectorAll('.coord.on').forEach(x => x.classList.remove('on'));
   document.querySelectorAll(`.coord[data-cell="${i}"]`).forEach(x => x.classList.add('on'));
   if (opt.scroll) {
@@ -1224,8 +1220,8 @@ function locate(i, opt = {}) {
 }
 function unlocate() {
   clearTimeout(locTimer);
-  document.querySelectorAll('#board .xband, #board .locator').forEach(el => { el.hidden = true; });
-  axisMark(null, null, 'on');
+  const loc = document.querySelector('#board .locator');
+  if (loc) loc.hidden = true;
   document.querySelectorAll('.coord.on').forEach(x => x.classList.remove('on'));
 }
 function bindCoords(root) {
@@ -1266,7 +1262,6 @@ function renderBoard() {
       cls += ' h';
       if (st === 2) {
         cls += ' f'; html = FLAG_SVG;
-        if (S.seen.has(i)) cls += ' seen';
         if (S.state === 'lost' && S.revealAll && !S.mine[i]) cls += ' wrong';
       } else if (A && !A.contradiction) {
         p = A.prob[i];
@@ -1586,7 +1581,7 @@ function serialize() {
     mine: Array.from(S.mine || []), adj: Array.from(S.adj || []), st: Array.from(S.st || []),
     state: S.state, revealed: S.revealed, flags: S.flags, elapsed: S.elapsed, hints: S.hints,
     heat: S.heat, log: S.log, explodedAt: S.explodedAt, lastEval: S.lastEval,
-    booms: S.booms, seen: [...S.seen], revealAll: S.revealAll, undos: S.undos,
+    booms: S.booms, revealAll: S.revealAll, undos: S.undos,
     prev: S.prev && { ...S.prev, st: Array.from(S.prev.st) },
   };
 }
@@ -1601,7 +1596,7 @@ function start(data) {
       mine: Uint8Array.from(g.mine), adj: Uint8Array.from(g.adj), st: Uint8Array.from(g.st),
       state: g.state, revealed: g.revealed, flags: g.flags, elapsed: g.elapsed, hints: g.hints,
       heat: g.heat, log: g.log || [], explodedAt: g.explodedAt, lastEval: g.lastEval,
-      booms: g.booms || (g.explodedAt >= 0 ? [g.explodedAt] : []), seen: new Set(g.seen || []),
+      booms: g.booms || (g.explodedAt >= 0 ? [g.explodedAt] : []),
       revealAll: g.revealAll ?? true, undos: g.undos || 0,
       prev: g.prev ? { ...g.prev, st: Uint8Array.from(g.prev.st) } : null,
     });
