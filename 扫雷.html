@@ -13,9 +13,10 @@
 /* Layout: a field-survey instrument — the minefield on the left, the analyst's notebook on the right */
 :root{
   --bg:#e6ebef; --surface:#f4f6f8; --raised:#ffffff; --ink:#14202b; --muted:#566473; --faint:#8592a0; --line:#d0d8df;
-  --board:#cdd6de; --tile-hi:#fbfdfe; --tile-lo:#e1e8ee; --tile-edge:#a9b5c0; --tile-shine:#ffffff; --well:#edf1f4; --well-line:#d9e0e6;
+  --board:#cdd6de; --tile-hi:#c4d2df; --tile-lo:#a9bccd; --tile-edge:#7c90a4; --tile-shine:#e4ecf3; --well:#fbfcfd; --well-line:#d7dee5;
   --accent:#d1661a; --accent-soft:#f6e2d0; --on-accent:#ffffff;
   --safe:#11906b; --safe-soft:#d4eee4; --danger:#d0392f; --danger-soft:#f7dbd8; --warn:#b97c0b; --warn-soft:#f4e8cc;
+  --best:#2457e6; --best-soft:#d7e2fc; --on-solid:#ffffff;   /* 概率图：最低风险 / 实色格上的文字 */
   --boom-ink:#ffffff; --mine-glint:#ffffff; --shadow-c:rgba(26,46,66,.20); --overlay:rgba(230,235,239,.78);
   --n1:#2160c4; --n2:#16884b; --n3:#d0362d; --n4:#4a35b0; --n5:#962a22; --n6:#0b8585; --n7:#1f2a33; --n8:#6b7785;
   --f-display:"Chakra Petch","Microsoft YaHei","PingFang SC",sans-serif;
@@ -26,9 +27,10 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0d1217; --surface:#131a21; --raised:#1b242d; --ink:#e3eaf0; --muted:#94a2af; --faint:#65717d; --line:#242f39;
-    --board:#0a0f13; --tile-hi:#34424f; --tile-lo:#27323d; --tile-edge:#05080b; --tile-shine:#465767; --well:#161e26; --well-line:#1e2830;
+    --board:#0a0f13; --tile-hi:#4b5d6e; --tile-lo:#3a4a59; --tile-edge:#05080b; --tile-shine:#62788c; --well:#10171d; --well-line:#1f2a33;
     --accent:#f29a47; --accent-soft:#3a2818; --on-accent:#1a0f05;
     --safe:#3fc89e; --safe-soft:#11322a; --danger:#ff6a5c; --danger-soft:#3c1a18; --warn:#efb43d; --warn-soft:#382c12;
+    --best:#5f8fff; --best-soft:#18264a; --on-solid:#0b1117;
     --boom-ink:#ffffff; --mine-glint:#ffffff; --shadow-c:rgba(0,0,0,.5); --overlay:rgba(13,18,23,.8);
     --n1:#6ea8ff; --n2:#5fd38d; --n3:#ff7b6e; --n4:#b39dff; --n5:#ffa27d; --n6:#4fd6cf; --n7:#e3eaf0; --n8:#9aa7b4;
     color-scheme:dark;
@@ -36,9 +38,10 @@
 }
 :root[data-theme="dark"]{
   --bg:#0d1217; --surface:#131a21; --raised:#1b242d; --ink:#e3eaf0; --muted:#94a2af; --faint:#65717d; --line:#242f39;
-  --board:#0a0f13; --tile-hi:#34424f; --tile-lo:#27323d; --tile-edge:#05080b; --tile-shine:#465767; --well:#161e26; --well-line:#1e2830;
+  --board:#0a0f13; --tile-hi:#4b5d6e; --tile-lo:#3a4a59; --tile-edge:#05080b; --tile-shine:#62788c; --well:#10171d; --well-line:#1f2a33;
   --accent:#f29a47; --accent-soft:#3a2818; --on-accent:#1a0f05;
   --safe:#3fc89e; --safe-soft:#11322a; --danger:#ff6a5c; --danger-soft:#3c1a18; --warn:#efb43d; --warn-soft:#382c12;
+  --best:#5f8fff; --best-soft:#18264a; --on-solid:#0b1117;
   --boom-ink:#ffffff; --mine-glint:#ffffff; --shadow-c:rgba(0,0,0,.5); --overlay:rgba(13,18,23,.8);
   --n1:#6ea8ff; --n2:#5fd38d; --n3:#ff7b6e; --n4:#b39dff; --n5:#ffa27d; --n6:#4fd6cf; --n7:#e3eaf0; --n8:#9aa7b4;
   color-scheme:dark;
@@ -112,8 +115,6 @@ kbd{font:500 10.5px/1 var(--f-mono);padding:3px 5px;border-radius:5px;border:1px
 /* locating a coordinate from the hint text */
 .locator{position:absolute;pointer-events:none;z-index:3;width:calc(var(--cell) + 10px);height:calc(var(--cell) + 10px);top:calc(5px + var(--r) * (var(--cell) + var(--gap)));left:calc(5px + var(--c) * (var(--cell) + var(--gap)));border:3px solid var(--accent);border-radius:calc(var(--cell)*.3);box-shadow:0 0 0 3px var(--accent-soft),0 6px 18px -4px var(--shadow-c)}
 .locator::after{content:"";position:absolute;inset:-3px;border:2px solid var(--accent);border-radius:inherit;animation:ripple 1.1s ease-out infinite}
-.locator::before{content:attr(data-label);position:absolute;left:50%;bottom:calc(100% + 5px);transform:translateX(-50%);white-space:nowrap;font:600 11px/1 var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--accent);color:var(--on-accent)}
-.locator.below::before{bottom:auto;top:calc(100% + 5px)}
 .board.shake{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
 
 /* ---------- cells ---------- */
@@ -133,8 +134,18 @@ kbd{font:500 10.5px/1 var(--f-mono);padding:3px 5px;border-radius:5px;border:1px
 .cell.wrong::after{content:"";position:absolute;inset:18%;background:linear-gradient(45deg,transparent 45%,var(--danger) 45%,var(--danger) 55%,transparent 55%),linear-gradient(-45deg,transparent 45%,var(--danger) 45%,var(--danger) 55%,transparent 55%)}
 
 /* probability heat map */
-.cell.heat{--heat:color-mix(in oklab,var(--danger) calc(var(--p)*100%),var(--safe));background:linear-gradient(180deg,color-mix(in oklab,var(--tile-hi) 58%,var(--heat)),color-mix(in oklab,var(--tile-lo) 52%,var(--heat)))}
 .cell .pct{font:700 calc(var(--cell)*.31)/1 var(--f-mono);color:var(--ink);letter-spacing:-.04em}
+/* 一眼可见：必定安全 / 必定是雷 / 没有必定安全格时的最低风险格 */
+.cell.heat.p-safe,.cell.heat.p-mine,.cell.heat.p-best{--solid:var(--safe);background:var(--solid);box-shadow:inset 0 1px 0 color-mix(in oklab,var(--on-solid) 30%,transparent),0 2px 0 color-mix(in oklab,var(--solid) 55%,var(--tile-edge))}
+.cell.heat.p-mine{--solid:var(--danger)}
+.cell.heat.p-best{--solid:var(--best)}
+.cell.heat.p-safe .pct,.cell.heat.p-mine .pct,.cell.heat.p-best .pct{color:var(--on-solid)}
+.cell.heat.p-best::after{content:"";position:absolute;inset:-4px;border-radius:calc(var(--cell)*.28);border:2.5px solid var(--best);box-shadow:0 0 0 3px var(--best-soft);pointer-events:none;animation:pulse 1.3s ease-in-out infinite}
+.legend .keys{display:flex;flex-wrap:wrap;gap:6px 14px}
+.legend .key{display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+.legend .sw{width:14px;height:14px;border-radius:4px;flex:none}
+.legend .sw.safe{background:var(--safe)} .legend .sw.mine{background:var(--danger)}
+.legend .sw.best{background:var(--best);box-shadow:0 0 0 2px var(--best-soft)}
 
 /* hint highlights */
 .cell.hl-safe::after,.cell.hl-mine::after,.cell.hl-guess::after,.cell.hl-src::after{content:"";position:absolute;inset:-3px;border-radius:calc(var(--cell)*.26);pointer-events:none}
@@ -159,7 +170,7 @@ kbd{font:500 10.5px/1 var(--f-mono);padding:3px 5px;border-radius:5px;border:1px
 .helpline b{color:var(--ink);font-weight:600}
 
 /* result overlay */
-.result{position:absolute;inset:0;display:grid;place-items:center;background:var(--overlay);backdrop-filter:blur(3px);border-radius:var(--r-lg);padding:16px;z-index:5;animation:fade .3s ease both}
+.result{position:absolute;inset:0;display:grid;place-items:center;overflow:auto;background:var(--overlay);backdrop-filter:blur(3px);border-radius:var(--r-lg);padding:16px;z-index:5;animation:fade .3s ease both}
 .result-card{width:min(420px,100%);background:var(--raised);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;box-shadow:0 30px 60px -30px var(--shadow-c);display:grid;gap:10px;animation:rise .35s cubic-bezier(.2,.8,.3,1.2) both}
 .result-card .eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0}
 .result-card h2{font:700 30px/1.15 var(--f-display);margin:0;text-wrap:balance}
@@ -185,8 +196,6 @@ canvas.confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 .tools{display:grid;grid-template-columns:1.3fr 1fr;gap:8px}
 .tools .btn{padding:12px 14px;font-size:15px}
 .legend{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);font-size:12px;color:var(--muted)}
-.legend .bar{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--safe),color-mix(in oklab,var(--danger) 50%,var(--safe)),var(--danger))}
-.legend .ticks{display:flex;justify-content:space-between;font:500 10.5px var(--f-mono)}
 
 .analysis{background:var(--raised);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px 18px;display:grid;gap:12px;box-shadow:0 18px 40px -30px var(--shadow-c);min-width:0}
 .verdict{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -241,22 +250,69 @@ canvas.confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 .log .k{display:flex;align-items:center;gap:6px;justify-content:flex-end;color:var(--muted)}
 .empty{font-size:12.5px;color:var(--muted);margin:0}
 
-.patterns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.pattern{display:grid;gap:7px;padding:10px;border-radius:12px;background:var(--surface);align-content:start;min-width:0}
-.pattern h4{margin:0;font:700 14px/1 var(--f-display);letter-spacing:.04em}
-.pattern p{margin:0;font-size:12px;line-height:1.55;color:var(--muted)}
-.pgrid{--cell:20px;display:grid;grid-template-columns:repeat(var(--cols),var(--cell));gap:3px;padding:5px;background:var(--board);border-radius:8px;width:max-content}
-.pgrid.wall{border-left:4px solid var(--ink)}
-.pgrid .cell{animation:none}
-.pgrid .cell.dim{background:var(--well);box-shadow:inset 0 0 0 1px var(--well-line)}
-.pgrid .cell.dim::after{content:"";width:3px;height:3px;border-radius:50%;background:var(--faint)}
-.pgrid .cell.h{cursor:default}
-.pgrid .cell.h:hover{transform:none;filter:none}
-.pgrid .cell.hl-safe::after,.pgrid .cell.hl-guess::after{animation:none}
-.pgrid .cell.hl-safe::after,.pgrid .cell.hl-mine::after{inset:-2px;border-width:2px}
-.pnote{font-size:11.5px;color:var(--faint);margin:0}
+.section-sub{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:6px}
+.section-sub h4{margin:0;font:600 12px/1 var(--f-mono);letter-spacing:.14em;color:var(--muted)}
 
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+/* 定式速查：棋盘下方的整宽区域 */
+.library{display:grid;gap:22px;border-top:1px solid var(--line);padding-top:22px}
+.library-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 28px}
+.library-head h2{margin:0;font:700 22px/1.2 var(--f-display);letter-spacing:.04em;text-wrap:balance}
+.library-head p{margin:6px 0 0;color:var(--muted);font-size:13.5px;max-width:60ch}
+.library-key{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--muted);--cell:16px}
+.library-key span{display:inline-flex;align-items:center;gap:6px}
+.library-key i{display:inline-grid}
+.library-key .cell .ico{width:70%;height:70%}
+.wall-mark{width:4px;height:16px;border-radius:2px;background:var(--ink)}
+.pgroups{display:grid;gap:22px}
+.pgroup{display:grid;gap:10px}
+.pgroup-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.pgroup-head h3{margin:0;font:600 12px/1 var(--f-mono);letter-spacing:.14em;color:var(--muted)}
+.pgroup-head p{margin:0;font-size:12.5px;color:var(--muted)}
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
+.pcard{display:grid;grid-template-rows:auto auto 1fr;gap:10px;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.pcard h4{margin:0;font:700 15px/1.2 var(--f-display);letter-spacing:.03em}
+.pcard p{margin:0;font-size:12.5px;line-height:1.65;color:var(--muted)}
+.pgrid{--cell:22px;display:grid;grid-template-columns:repeat(var(--cols),var(--cell));gap:3px;padding:6px;background:var(--board);border-radius:8px;width:max-content}
+.pgrid.wall{border-left:4px solid var(--ink)}
+.pmini .cell{animation:none}
+.pmini .cell .ico{animation:none}
+.pmini .cell.dim{background:var(--well);box-shadow:inset 0 0 0 1px var(--well-line)}
+.pmini .cell.dim::after{content:"";width:3px;height:3px;border-radius:50%;background:var(--faint)}
+.pmini .cell.h{cursor:default}
+.pmini .cell.h:hover{transform:none;filter:none}
+.pmini .cell.hl-safe::after,.pmini .cell.hl-guess::after{animation:none}
+.pmini .cell.hl-safe::after,.pmini .cell.hl-mine::after{inset:-2px;border-width:2px}
+
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+
+/* 推理评分 */
+.score{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 14px;align-items:center;padding:14px;border-radius:14px;background:var(--surface)}
+.g-S{--g:var(--best)} .g-A{--g:var(--safe)} .g-B{--g:var(--accent)} .g-C{--g:var(--warn)} .g-D{--g:var(--danger)}
+.score-main{display:flex;align-items:center;gap:8px}
+.score-num{font:700 46px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--ink)}
+.grade{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font:700 20px/1 var(--f-display);background:var(--g);color:var(--on-solid)}
+.score-side{display:grid;gap:3px;min-width:0}
+.score-side b{font:600 14px/1.3 var(--f-body);color:var(--ink)}
+.score-side span{font-size:12px;line-height:1.4;color:var(--muted)}
+.meters{grid-column:1/-1;display:grid;gap:7px}
+.meter{display:grid;grid-template-columns:60px minmax(0,1fr) 52px;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.meter .track{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.meter .fill{display:block;height:100%;border-radius:inherit;background:var(--g);width:var(--w)}
+.meter b{font:700 12px var(--f-mono);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.log .aid{font:500 10.5px var(--f-mono);color:var(--faint)}
+
+/* 英雄榜 */
+.heroes{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.heroes li{display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;background:var(--surface)}
+.heroes li.new{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.heroes li.none{grid-template-columns:minmax(0,1fr);background:none;padding:2px 0}
+.heroes .rk{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 12px/1 var(--f-display);background:var(--board);color:var(--muted)}
+.heroes .rk1{background:var(--accent);color:var(--on-accent)}
+.heroes .tm{font:700 16px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--ink)}
+.heroes .tm small{font:500 11px var(--f-body);color:var(--muted);margin-left:3px}
+.heroes .sc{font:600 11px/1 var(--f-mono);padding:4px 6px;border-radius:6px;background:color-mix(in oklab,var(--g) 15%,transparent);color:var(--g);white-space:nowrap}
+.heroes .dt{font:500 11px var(--f-mono);color:var(--faint);white-space:nowrap}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
 .stats div{background:var(--surface);border-radius:10px;padding:8px 10px}
 .stats dt{font:500 10px/1.2 var(--f-mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
 .stats dd{margin:3px 0 0;font:700 18px/1.15 var(--f-display);font-variant-numeric:tabular-nums}
@@ -265,7 +321,6 @@ canvas.confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:
   .statusbar{grid-template-columns:1fr auto 1fr}
   .lcd{font-size:21px;min-width:58px}
   .lcd-label{display:none}
-  .patterns{grid-template-columns:minmax(0,1fr)}
   .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .log li{grid-template-columns:30px 68px 46px 1fr}
 }
@@ -356,9 +411,12 @@ canvas.confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:
         <button type="button" class="btn" id="heatBtn" aria-pressed="false">概率图 <kbd>M</kbd></button>
       </div>
       <div class="legend" id="legend" hidden>
-        <div>每个未翻开格子是雷的概率（%），只根据屏幕上的数字和剩余雷数计算</div>
-        <div class="bar"></div>
-        <div class="ticks"><span>0 必定安全</span><span>50</span><span>100 必定是雷</span></div>
+        <div>格子上的数字是它是雷的概率（%），只根据屏幕上的数字和剩余雷数计算</div>
+        <div class="keys">
+          <span class="key"><span class="sw safe"></span>0% 必定安全</span>
+          <span class="key"><span class="sw mine"></span>100% 必定是雷</span>
+          <span class="key"><span class="sw best"></span>最低风险（没有必定安全的格子时）</span>
+        </div>
       </div>
 
       <article class="analysis" id="analysis" aria-live="polite"></article>
@@ -373,17 +431,31 @@ canvas.confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:
       </section>
 
       <section class="section">
-        <div class="section-head"><h3>定式速查</h3></div>
-        <div class="patterns" id="patterns"></div>
-        <p class="pnote">绿点 = 一定安全，红菱 = 一定是雷，空白 = 未知，带点的灰格 = 已翻开、与本推理无关。</p>
-      </section>
-
-      <section class="section">
         <div class="section-head"><h3>战绩 · <span id="statsName">中级</span></h3></div>
         <dl class="stats" id="stats"></dl>
+        <div class="section-sub"><h4>英雄榜</h4><span class="hint-tip">用时最少的前五局</span></div>
+        <ol class="heroes" id="heroes"></ol>
       </section>
     </aside>
   </main>
+
+  <section class="library" aria-labelledby="libTitle">
+    <header class="library-head">
+      <div>
+        <h2 id="libTitle">定式速查</h2>
+        <p>扫雷里反复出现的局面。认出它们，就能不靠猜直接下手。</p>
+      </div>
+      <div class="library-key pmini" aria-label="图例">
+        <span><i class="cell h hl-safe"></i>一定安全</span>
+        <span><i class="cell h hl-mine"></i>一定是雷</span>
+        <span><i class="cell h"></i>未知</span>
+        <span><i class="cell h f"></i>已确定的雷</span>
+        <span><i class="cell dim"></i>已翻开、与推理无关</span>
+        <span><i class="wall-mark"></i>棋盘边缘</span>
+      </div>
+    </header>
+    <div class="pgroups" id="patterns"></div>
+  </section>
 </div>
 
 <script>
@@ -857,6 +929,7 @@ function doMove(targets) {
     ev = { kind: 'first', p: 0, cell: targets[0] };
   } else {
     ev = evaluate(targets);
+    ev.assisted = S.hintOpen || S.heat;   // 开着提示或概率图时走的这一步，不算玩家自己的判断
   }
   // 记下这一步之前的盘面和页面状态，踩雷后可以原样返回
   S.prev = {
@@ -899,6 +972,73 @@ function flashCells(list) {
   }
 }
 
+/* ==========================================================================
+   推理评分：每一步和「最优选择」比，保留了多少存活概率
+   - 有 100% 安全格时最优 = 翻安全格；否则最优 = 翻雷率最低的格子
+   - 单步系数 = (1 − 你的雷率) / (1 − 最优雷率)；确定安全、最优猜测记 1
+   - 决策效率 = 所有自主步骤的系数连乘 = 你相对完美玩家的存活率
+   - 独立完成度 = 没有借助提示 / 概率图的步骤占比
+   - 推理评分 = 决策效率 × 独立完成度（0–100）
+   ========================================================================== */
+function stepFactor(e) {
+  if (e.kind === 'risky') return Math.max(0, 1 - e.p);
+  if (e.kind === 'subopt' && e.minP < 1) return Math.max(0, Math.min(1, (1 - e.p) / (1 - e.minP)));
+  return 1;
+}
+const gradeOf = s => s >= 95 ? ['S', '大师'] : s >= 85 ? ['A', '高手'] : s >= 70 ? ['B', '熟练'] : s >= 50 ? ['C', '入门'] : ['D', '新手'];
+function scoreGame() {
+  const dec = S.log.filter(e => e.kind !== 'first' && e.kind !== 'na');
+  if (!dec.length) return null;
+  const own = dec.filter(e => !e.assisted);
+  // 每用一次提示至少算一步辅助（看完提示再关掉也算）
+  const assisted = Math.min(dec.length, Math.max(dec.length - own.length, S.hints));
+  const indep = (dec.length - assisted) / dec.length;
+  let eff = 1, worst = null;
+  for (const e of own) {
+    const f = stepFactor(e);
+    eff *= f;
+    if (f < 1 && (!worst || f < worst.f)) worst = { e, f };
+  }
+  const ded = own.filter(e => e.kind === 'safe' || e.kind === 'risky');
+  const gss = own.filter(e => e.kind === 'forced' || e.kind === 'subopt');
+  const score = Math.round(eff * indep * 100);
+  return {
+    score, grade: gradeOf(score), eff, indep, decisions: dec.length, assisted,
+    dedOk: ded.filter(e => e.kind === 'safe').length, dedN: ded.length,
+    gOk: gss.filter(e => e.kind === 'forced').length, gN: gss.length, worst,
+  };
+}
+function scorePanel(sc) {
+  if (!sc) return '<div class="score"><div class="score-side" style="grid-column:1/-1"><b>推理评分</b><span>这局没有需要判断的步骤，无法评分。</span></div></div>';
+  const meter = (label, ratio, text) => `<div class="meter"><span>${label}</span><span class="track"><span class="fill" style="--w:${ratio == null ? 0 : Math.round(ratio * 100)}%"></span></span><b>${text}</b></div>`;
+  const pc = x => Math.round(x * 100) + '%';
+  return `<div class="score g-${sc.grade[0]}">
+    <div class="score-main"><span class="score-num">${sc.score}</span><span class="grade">${sc.grade[0]}</span></div>
+    <div class="score-side"><b>推理评分 · ${sc.grade[1]}</b><span>决策效率 × 独立完成度，满分 100</span></div>
+    <div class="meters">
+      ${meter('决策效率', sc.eff, pc(sc.eff))}
+      ${meter('独立完成', sc.indep, pc(sc.indep))}
+      ${meter('推理准确', sc.dedN ? sc.dedOk / sc.dedN : null, sc.dedN ? `${sc.dedOk}/${sc.dedN}` : '—')}
+      ${meter('猜测质量', sc.gN ? sc.gOk / sc.gN : null, sc.gN ? `${sc.gOk}/${sc.gN}` : '—')}
+    </div>
+  </div>`;
+}
+function scoreDetail(sc) {
+  if (!sc) return '';
+  const pc = x => Math.round(x * 100) + '%';
+  let html = `<p>决策效率 ${pc(sc.eff)}：和每一步都选最优的完美玩家相比，你的选择保留了 ${pc(sc.eff)} 的存活概率。</p>`;
+  if (sc.worst) {
+    const { e, f } = sc.worst;
+    const cost = f === 0 ? '这一格必定是雷，决策效率直接归零' : `这一步让决策效率打了 ${(f * 10).toFixed(1)} 折`;
+    html += `<p class="note">最大失误：第 ${e.n} 步 ${pos(e.cell)}，雷率 ${pct(e.p)}，${e.kind === 'risky' ? `当时盘面上有 ${e.safeN} 个 100% 安全的格子` : `当时最低风险只有 ${pct(e.minP)}`}。${cost}。</p>`;
+  } else if (sc.decisions > sc.assisted) {
+    html += '<p class="note">自己判断的每一步都是最优选择。</p>';
+  }
+  if (sc.assisted) html += `<p class="hint-tip">有 ${sc.assisted} 步借助了提示或概率图，这些步骤不计入你自己的判断，所以独立完成度是 ${pc(sc.indep)}。</p>`;
+  html += `<p class="hint-tip">推理准确 = 有安全格时你找到它的次数；猜测质量 = 必须猜时你选中最低风险的次数。</p>`;
+  return html;
+}
+
 function win() {
   S.state = 'won'; stopTimer();
   for (let i = 0; i < S.mine.length; i++) if (S.mine[i] && S.st[i] !== 2) S.st[i] = 2;
@@ -908,10 +1048,20 @@ function win() {
   // 用过「返回上一步」的局算胜场，但不参与最佳用时
   const isBest = !S.undos && (st.best == null || S.elapsed < st.best);
   if (isBest) st.best = S.elapsed;
+  const sc = scoreGame();
+  const isBestScore = !!sc && (st.bestScore == null || sc.score > st.bestScore);
+  if (isBestScore) st.bestScore = sc.score;
   LS.set(k, st);
   clearToast();
-  setCard({ tone: 'safe', pill: '通关', title: '雷区已清空', html: `<p>本局用时 ${S.elapsed.toFixed(1)} 秒，使用提示 ${S.hints} 次${S.undos ? `，返回上一步 ${S.undos} 次（不计入最佳用时）` : ''}。看看下面的决策记录：绿色越多，说明你越多地靠推理而不是运气。</p>` });
-  showResult('win', isBest);
+  // 英雄榜：用过「返回上一步」的局不上榜
+  let rank = 0;
+  if (!S.undos) {
+    const entry = { t: S.elapsed, score: sc ? sc.score : null, at: Date.now() };
+    rank = addHero(entry);
+    if (rank) S.heroAt = entry.at;
+  }
+  setCard({ tone: 'safe', pill: '通关', title: sc ? `推理评分 ${sc.score} · ${sc.grade[1]}` : '雷区已清空', html: `<p>本局用时 ${S.elapsed.toFixed(1)} 秒，使用提示 ${S.hints} 次${S.undos ? `，返回上一步 ${S.undos} 次（不计入最佳用时和英雄榜）` : ''}${rank ? `，登上英雄榜第 ${rank} 名` : ''}。</p>${scoreDetail(sc)}` });
+  showResult('win', isBest, isBestScore, rank);
   confetti();
 }
 /* 踩雷：只显示踩中的雷。其余雷要等玩家选择「揭晓全部雷」才显示，揭晓后不能再返回 */
@@ -930,7 +1080,8 @@ function loseCard() {
   const html = `<p>${loseReview(ev)}</p>` + (canUndo()
     ? `<div class="row"><button type="button" class="btn primary" data-act="undo">返回上一步 <kbd>Z</kbd></button><button type="button" class="btn" data-act="reveal">揭晓全部雷</button></div>
        <p class="hint-tip">返回后，盘面回到这一步之前的样子，其他雷的位置不会显示。揭晓全部雷之后就不能再返回。</p>`
-    : `<div class="row"><button type="button" class="btn primary" data-act="again">再来一局 <kbd>N</kbd></button></div>`);
+    : `<div class="row"><button type="button" class="btn primary" data-act="again">再来一局 <kbd>N</kbd></button></div>`)
+    + scoreDetail(scoreGame());
   return { tone: 'danger', pill: '踩雷', title: canUndo() ? '可以返回上一步' : '这一局结束了', html };
 }
 function revealMines() {
@@ -1208,8 +1359,6 @@ function locate(i, opt = {}) {
   const b = $('#board'), [r, c] = rc(i);
   const loc = b.querySelector('.locator');
   loc.style.setProperty('--r', r - 1); loc.style.setProperty('--c', c - 1); loc.hidden = false;
-  loc.dataset.label = `第${r}行 · 第${c}列`;
-  loc.classList.toggle('below', r <= 2);
   document.querySelectorAll('.coord.on').forEach(x => x.classList.remove('on'));
   document.querySelectorAll(`.coord[data-cell="${i}"]`).forEach(x => x.classList.add('on'));
   if (opt.scroll) {
@@ -1249,6 +1398,14 @@ function renderBoard() {
   const A = S.heat && playing ? getAnalysis() : null;
   const hl = hlCodes();
   const N = S.rows * S.cols;
+  // 概率图上要一眼标出来的格子：只看显示概率的格子（未插旗的未翻开格）
+  let hasSafe = false, minShown = 1;
+  if (A && !A.contradiction) for (let i = 0; i < N; i++) {
+    if (S.st[i] !== 0) continue;
+    const q = A.prob[i];
+    if (q === 0) hasSafe = true;
+    else if (q < minShown) minShown = q;
+  }
   for (let i = 0; i < N; i++) {
     const st = S.st[i];
     let cls = 'cell', html = '', p = null;
@@ -1266,6 +1423,9 @@ function renderBoard() {
       } else if (A && !A.contradiction) {
         p = A.prob[i];
         cls += ' heat';
+        if (p === 0) cls += ' p-safe';
+        else if (p === 1) cls += ' p-mine';
+        else if (!hasSafe && p - minShown < 1e-9) cls += ' p-best';
         const v = Math.round(p * 100);
         html = `<span class="pct">${p > 0 && v === 0 ? '<1' : p < 1 && v === 100 ? '99' : v}</span>`;
       }
@@ -1341,19 +1501,51 @@ function renderLog() {
       <span class="i">#${e.n}</span>
       <span class="c">${pos(e.cell)}</span>
       <span class="p">${e.kind === 'first' ? '0%' : pct(e.p)}</span>
-      <span class="k" title="${e.undone ? `当时评价：${KIND[e.kind][0]}` : ''}"><span class="dot ${KIND[e.undone ? 'undone' : e.kind][1]}"></span>${KIND[e.undone ? 'undone' : e.kind][0]}</span>
+      <span class="k" title="${e.undone ? `当时评价：${KIND[e.kind][0]}` : ''}"><span class="dot ${KIND[e.undone ? 'undone' : e.kind][1]}"></span>${KIND[e.undone ? 'undone' : e.kind][0]}${e.assisted ? '<span class="aid" title="这一步走的时候开着提示或概率图"> · 辅助</span>' : ''}</span>
     </li>`).join('');
   $('#log').innerHTML = rows || '';
   if (!rows) $('#log').innerHTML = '<li style="grid-template-columns:1fr;background:none"><p class="empty">开始翻格子后，这里会记录每一步当时的雷率和评价。</p></li>';
 }
 
+/* 英雄榜：每个难度各自保留用时最少的前五局（只记通关、且没用过返回上一步的局） */
+const heroKey = () => statsKey().replace('ms-stats', 'ms-heroes');
+function addHero(entry) {
+  const list = LS.get(heroKey(), []);
+  list.push(entry);
+  list.sort((a, b) => a.t - b.t || a.at - b.at);
+  const top = list.slice(0, 5);
+  LS.set(heroKey(), top);
+  return top.indexOf(entry) + 1;   // 0 = 没上榜
+}
+function fmtDate(ms) {
+  const d = new Date(ms), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function renderHeroes() {
+  const list = LS.get(heroKey(), []);
+  $('#heroes').innerHTML = list.length
+    ? list.map((e, k) => {
+        const g = e.score != null ? gradeOf(e.score) : null;
+        return `<li${e.at === S.heroAt ? ' class="new"' : ''}>
+          <span class="rk${k === 0 ? ' rk1' : ''}">${k + 1}</span>
+          <span class="tm">${e.t.toFixed(1)}<small>秒</small></span>
+          ${g ? `<span class="sc g-${g[0]}" title="推理评分">${e.score} · ${g[0]}</span>` : '<span></span>'}
+          <span class="dt">${fmtDate(e.at)}</span>
+        </li>`;
+      }).join('')
+    : '<li class="none"><p class="empty">还没有记录。通关一局后，用时会出现在这里；用过「返回上一步」的局不上榜。</p></li>';
+}
+
 function renderStats() {
   const st = LS.get(statsKey(), { played: 0, won: 0, best: null });
-  $('#statsName').textContent = S.diff === 'custom' ? `自定义 ${S.cols}×${S.rows}·${S.mines}` : PRESETS[S.diff].name;
+  const name = S.diff === 'custom' ? `自定义 ${S.cols}×${S.rows}·${S.mines}` : PRESETS[S.diff].name;
+  $('#statsName').textContent = name;
+  renderHeroes();
   $('#stats').innerHTML = `
     <div><dt>最佳用时</dt><dd>${st.best != null ? st.best.toFixed(1) + 's' : '—'}</dd></div>
     <div><dt>胜场 / 总局</dt><dd>${st.won} / ${st.played}</dd></div>
-    <div><dt>胜率</dt><dd>${st.played ? Math.round(st.won / st.played * 100) + '%' : '—'}</dd></div>`;
+    <div><dt>胜率</dt><dd>${st.played ? Math.round(st.won / st.played * 100) + '%' : '—'}</dd></div>
+    <div><dt>最佳评分</dt><dd>${st.bestScore != null ? `${st.bestScore} · ${gradeOf(st.bestScore)[0]}` : '—'}</dd></div>`;
 }
 
 function renderAll() { renderBoard(); renderStatus(); renderLog(); renderStats(); }
@@ -1373,7 +1565,7 @@ function coachToast(ev) {
 function clearToast() { clearTimeout(toastTimer); const s = $('#toastSlot'); if (s) s.innerHTML = ''; }
 
 /* ---------- result overlay ---------- */
-function showResult(type, isBest) {
+function showResult(type, isBest, isBestScore, rank) {
   const counts = { safe: 0, guess: 0 };
   S.log.forEach(e => { if (e.kind === 'safe') counts.safe++; else if (e.kind !== 'first' && e.kind !== 'na') counts.guess++; });
   const card = $('#resultCard');
@@ -1382,19 +1574,21 @@ function showResult(type, isBest) {
   card.innerHTML = type === 'win'
     ? `<p class="eyebrow">通关 · ${S.diff === 'custom' ? '自定义' : PRESETS[S.diff].name}</p>
        <h2>${S.elapsed.toFixed(1)} 秒</h2>
-       ${isBest ? '<span class="badge-new">新纪录</span>' : ''}
-       <p>每一步都没踩雷。下面是你这局的决策构成。</p>`
+       ${isBest || rank ? `<div class="badges">${isBest ? '<span class="badge-new">新纪录</span>' : ''}${rank ? `<span class="badge-new">英雄榜第 ${rank} 名</span>` : ''}</div>` : ''}
+       <p>雷区已清空。下面是你这局的推理评分。</p>`
     : `<p class="eyebrow">踩雷 · 第 ${S.log.length} 步</p>
        <h2>${ev && ev.kind === 'risky' ? '这一步本可以避开' : ev && ev.kind === 'subopt' ? '有更稳的选择' : ev && ev.kind === 'forced' ? '运气不站你这边' : '踩到雷了'}</h2>
        <p>${loseReview(ev)}</p>`;
   card.innerHTML += `
+    ${scorePanel(scoreGame())}
+    ${isBestScore ? '<span class="badge-new">最高评分</span>' : ''}
     <dl class="result-stats">
       <div><dt>推理步</dt><dd>${counts.safe}</dd></div>
       <div><dt>猜测步</dt><dd>${counts.guess}</dd></div>
       <div><dt>用提示</dt><dd>${S.hints}</dd></div>
       ${S.undos ? `<div><dt>返回</dt><dd>${S.undos}</dd></div>` : ''}
     </dl>
-    ${type === 'win' && S.undos ? '<p>这局用过「返回上一步」，不计入最佳用时。</p>' : ''}
+    ${type === 'win' && S.undos ? '<p>这局用过「返回上一步」，不计入最佳用时和英雄榜。</p>' : ''}
     <div class="row">
       ${type === 'lose' && canUndo()
         ? `<button type="button" class="btn primary" data-act="undo">返回上一步 <kbd>Z</kbd></button>
@@ -1439,18 +1633,55 @@ function confetti() {
 }
 
 /* ---------- pattern cheat sheet ---------- */
+/* 每行一个字符串：S 一定安全 · M 一定是雷 · ? 未知 · F 已确定的雷（插旗）
+   · . 已翻开、与推理无关 · 数字 = 已翻开的数字。wall = 左侧是棋盘边缘。
+   图外的格子都视为已翻开（数字只看图内的格子） */
 const PATTERNS = [
-  { name: '1-2-1', top: 'SMSMS', bot: '.121.', text: '贴着一排未知格出现 1-2-1：雷在两个 1 的正上方，中间和两端都安全。' },
-  { name: '1-2-2-1', top: 'SSMMSS', bot: '.1221.', text: '雷在两个 2 的正上方，其余全部安全。' },
-  { name: '1-2', top: 'S??M', bot: '.12.', text: '2 要两颗雷，和 1 共享的两格最多一颗，所以 2 独有的那格是雷，1 独有的那格安全。' },
-  { name: '靠墙 1-1', top: '??S', bot: '11.', wall: true, text: '第一个 1 的雷在左边两格里，第二个 1 也看得到这两格，所以它右上方那格安全。' },
+  {
+    group: '基本规则', note: '所有推理都从这两条开始。',
+    items: [
+      { name: '数字已满', rows: ['SSS', 'S1F', '...'], text: '1 的旁边已经有一颗确定的雷，雷数满了，它周围其余的未知格全部安全。' },
+      { name: '格子刚好够', rows: ['MM.', '.2.', '...'], text: '2 的周围只剩 2 个未翻开的格子，雷数等于格子数，所以它们全是雷。' },
+    ],
+  },
+  {
+    group: '经典定式', note: '贴着一排未知格的数字组合，出现频率最高。',
+    items: [
+      { name: '靠墙 1-1', rows: ['??S', '11.'], wall: true, text: '靠墙的 1 只看得到左边两格，雷就在这两格里；旁边的 1 也看得到这两格，所以它右上方那格安全。' },
+      { name: '1-2', rows: ['S??M', '.12.'], text: '2 要两颗雷，和 1 共享的两格最多一颗，所以 2 独有的那格一定是雷，1 独有的那格一定安全。' },
+      { name: '靠墙 1-2', rows: ['??M', '12.'], wall: true, text: '靠墙的 1 说左边两格里只有一颗雷，2 还差一颗，只能在它右上方，那格一定是雷。' },
+      { name: '1-2-1', rows: ['SMSMS', '.121.'], text: '雷在两个 1 的正上方，中间和两端都安全。看到 1-2-1 可以直接下手。' },
+      { name: '1-2-2-1', rows: ['SSMMSS', '.1221.'], text: '雷在两个 2 的正上方，其余全部安全。' },
+    ],
+  },
+  {
+    group: '进阶技巧', note: '先减掉已确定的雷，再套用上面的定式。残局时别忘了看剩余雷数。',
+    items: [
+      { name: '减法：2-3 当 1-2', rows: ['S??M', '.23.', '.F..'], text: '2 和 3 都挨着同一颗确定的雷，各减 1 就成了 1-2：右上角是雷，左上角安全。' },
+      { name: '减法：靠墙 2-2 当 1-1', rows: ['??S', '22.', 'F..'], wall: true, text: '两个 2 都挨着下方那颗确定的雷，各减 1 就是靠墙 1-1：右上方那格安全。' },
+    ],
+  },
 ];
 function renderPatterns() {
-  $('#patterns').innerHTML = PATTERNS.map(p => {
-    const cells = [...p.top].map(ch => `<div class="cell h ${ch === 'S' ? 'hl-safe' : ch === 'M' ? 'hl-mine' : ''}"></div>`).join('')
-      + [...p.bot].map(ch => ch === '.' ? '<div class="cell dim"></div>' : `<div class="cell r n${ch}" style="animation:none">${ch}</div>`).join('');
-    return `<div class="pattern"><h4>${p.name}</h4><div class="pgrid${p.wall ? ' wall' : ''}" style="--cols:${p.top.length}">${cells}</div><p>${p.text}</p></div>`;
-  }).join('');
+  const cell = ch =>
+    ch === 'S' ? '<div class="cell h hl-safe"></div>'
+    : ch === 'M' ? '<div class="cell h hl-mine"></div>'
+    : ch === '?' ? '<div class="cell h"></div>'
+    : ch === 'F' ? `<div class="cell h f">${FLAG_SVG}</div>`
+    : ch === '.' ? '<div class="cell dim"></div>'
+    : `<div class="cell r n${ch}">${ch}</div>`;
+  $('#patterns').innerHTML = PATTERNS.map(g => `
+    <div class="pgroup">
+      <div class="pgroup-head"><h3>${g.group}</h3><p>${g.note}</p></div>
+      <div class="pcards">${g.items.map(p => `
+        <article class="pcard">
+          <h4>${p.name}</h4>
+          <div class="pgrid pmini${p.wall ? ' wall' : ''}" style="--cols:${p.rows[0].length}">${p.rows.join('').split('').map(cell).join('')}</div>
+          <p>${p.text}</p>
+        </article>`).join('')}
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('.library-key .cell.f').forEach(el => { el.innerHTML = FLAG_SVG; });
 }
 
 /* ==========================================================================
